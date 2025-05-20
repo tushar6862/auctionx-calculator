@@ -5,16 +5,199 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 4rem 2rem;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #7c00ff 0%, #001fff 100%);
+  background: linear-gradient(45deg, #2a0845, #6441a5, #3b0764, #4a1f84);
+  background-size: 400% 400%;
+  animation: gradientBackground 15s ease infinite;
+}
+
+.noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+/* Three-column layout styles with fixed card sizes */
+.calculator-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  max-height: 90vh;
+}
+
+.form-column,
+.value-column,
+.results-column {
+  padding: 0.5rem;
+  height: 100%;
+  flex: 1;
+  /* Equal width for all columns */
+  min-width: 0;
+  /* Prevent flex items from growing beyond their container */
+}
+
+.input-card,
+.value-card,
+.results-card {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card body should take full height */
+.input-card .card-body,
+.value-card .card-body,
+.results-card .card-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.input-card {
+  border-left: 4px solid #7c00ff;
+}
+
+.value-card {
+  border-left: 4px solid #00a3ff;
+}
+
+.results-card {
+  border-left: 4px solid #00c853;
+}
+
+/* Form field container */
+.form-field-container {
+  width: 100%;
+}
+
+/* Input fields should not affect card width */
+.form-control {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Ensure text doesn't overflow */
+.value-label,
+.result-label,
+.value-value,
+.result-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Value and result items should have fixed height */
+.value-item,
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+  min-height: 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .calculator-row {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+  }
+  
+  .form-column,
+  .value-column,
+  .results-column {
+    width: 100%;
+    margin-bottom: 1rem;
+    height: auto;
+  }
+  
+  .input-card,
+  .value-card,
+  .results-card {
+    height: auto;
+    min-height: 300px;
+    max-height: 400px;
+  }
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  animation: float 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.glow-1 {
+  top: 20%;
+  left: 70%;
+  width: 400px;
+  height: 400px;
+}
+
+.glow-2 {
+  top: 70%;
+  left: 20%;
+  width: 350px;
+  height: 350px;
+  animation-delay: -3s;
+}
+
+@keyframes gradientBackground {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-10px, -30px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 .logo-container {
   position: absolute;
-  top: 40px;
-  left: 40px;
+  top: 20px;
+  left: 20px;
   display: flex;
   align-items: center;
 }
@@ -23,7 +206,6 @@
   width: 100px;
   height: auto;
 }
-
 
 /* Floating background circles */
 .background-circle {
@@ -67,7 +249,7 @@
 
 body {
   background-color: #f8f9fa;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .auction-card {
@@ -150,11 +332,11 @@ body {
   .auction-card .card-header {
     padding: 1rem;
   }
-  
+
   .logo {
     max-width: 60px;
   }
-  
+
   h2 {
     font-size: 1.5rem;
   }
@@ -166,6 +348,152 @@ body {
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+}
+
+/* Three-column layout styles */
+
+.calculator-row {
+  height: calc(90vh - 120px);
+  max-height: 700px;
+  overflow: hidden;
+}
+
+.form-column,
+.value-column,
+.results-column {
+  padding: 0.5rem;
+  height: 100%;
+}
+
+.input-card,
+.value-card,
+.results-card {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.input-card:hover,
+.value-card:hover,
+.results-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.input-card {
+  border-left: 4px solid #7c00ff;
+}
+
+.value-card {
+  border-left: 4px solid #00a3ff;
+}
+
+.results-card {
+  border-left: 4px solid #00c853;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* Value list styles */
+.value-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.value-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.value-item.completed {
+  background-color: rgba(0, 200, 83, 0.1);
+}
+
+.value-item.pending {
+  opacity: 0.6;
+}
+
+.value-label-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.value-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.value-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.check-icon {
+  color: #00c853;
+  font-size: 0.8rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .calculator-content {
+    padding: 1rem;
+    max-height: none;
+  }
+  
+  .calculator-row {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .form-column,
+  .value-column,
+  .results-column {
+    margin-bottom: 1rem;
+    height: auto;
+  }
+  
+  .input-card,
+  .value-card,
+  .results-card {
+    height: auto;
+    min-height: 300px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -199,11 +527,21 @@ body {
 }
 
 @keyframes float {
-  0% { transform: translateY(0) translateX(0) rotate(0); }
-  25% { transform: translateY(-20px) translateX(10px) rotate(5deg); }
-  50% { transform: translateY(10px) translateX(-15px) rotate(-5deg); }
-  75% { transform: translateY(15px) translateX(5px) rotate(3deg); }
-  100% { transform: translateY(0) translateX(0) rotate(0); }
+  0% {
+    transform: translateY(0) translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(10px) translateX(-15px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(15px) translateX(5px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0) translateX(0) rotate(0);
+  }
 }
 
 /* Form card styles */
@@ -213,7 +551,7 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   position: relative;
   z-index: 10;
   backdrop-filter: blur(10px);
@@ -222,8 +560,14 @@ body {
 }
 
 @keyframes cardAppear {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Form header styles */
@@ -253,7 +597,7 @@ body {
 }
 
 .form-steps::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 0;
@@ -303,6 +647,203 @@ body {
   font-weight: 600;
 }
 
+/* Add these new styles to the existing CSS file */
+
+/* Main card styling */
+.main-card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Two-column layout */
+.left-column,
+.right-column {
+  padding: 20px;
+}
+
+.left-column {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Input card styling */
+.input-card {
+  border: 1px solid rgba(124, 0, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.input-card:hover {
+  box-shadow: 0 6px 12px rgba(124, 0, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Results card styling */
+.results-card {
+  border: 1px solid rgba(0, 31, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+/* Form field container for animation */
+.form-field-container {
+  overflow: hidden;
+  margin-bottom: 10px;
+  will-change: height, opacity, transform;
+}
+
+/* Field navigation button styling */
+/* Field navigation button styling */
+.field-nav-button {
+  background-color: #7c00ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin: 0 auto; /* This ensures horizontal centering */
+}
+
+.text-center {
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.field-nav-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.field-nav-button:not(:disabled):hover {
+  background-color: #001fff;
+  transform: translateY(3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.arrow-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.field-nav-button:not(:disabled):hover .arrow-icon {
+  animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(2px);
+  }
+}
+
+/* Results summary styling */
+.results-summary {
+  padding: 10px;
+  height: 100%;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  gap: 8px; /* Add some spacing between label and value */
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-label {
+  white-space: nowrap; /* Prevent text from breaking */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis if text is too long */
+  flex: 1; /* Allow label to take available space */
+}
+
+.result-value {
+  white-space: nowrap; /* Keep value on one line */
+  font-weight: 500; /* Make the value slightly bolder */
+  text-align: right; /* Align the value to the right */
+}
+
+.result-label-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.check-icon {
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.result-item.completed {
+  opacity: 1;
+}
+
+.result-item.pending {
+  opacity: 0.6;
+}
+
+.result-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.result-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.profit-positive {
+  color: #28a745 !important;
+}
+
+.profit-negative {
+  color: #dc3545 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .left-column {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 30px;
+    margin-bottom: 20px;
+  }
+
+  .field-nav-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .arrow-icon {
+    font-size: 1rem;
+  }
+}
+
 /* Form fields styles */
 .form-section {
   margin-bottom: 2rem;
@@ -310,8 +851,14 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-section h3 {
@@ -363,9 +910,18 @@ label {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 /* Select styles */
@@ -560,39 +1116,39 @@ select.form-control {
   .form-card {
     padding: 1.5rem;
   }
-  
+
   .form-steps {
     flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
   }
-  
+
   .form-steps::before {
     display: none;
   }
-  
+
   .step {
     margin-bottom: 1rem;
   }
-  
+
   .form-actions {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .gender-options {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .education-entry .row {
     flex-direction: column;
   }
-  
+
   .education-entry .col {
     margin-bottom: 1rem;
   }
@@ -605,15 +1161,30 @@ select.form-control {
   transform: translateY(10px);
 }
 
-.form-group:nth-child(1) { animation-delay: 0.1s; }
-.form-group:nth-child(2) { animation-delay: 0.2s; }
-.form-group:nth-child(3) { animation-delay: 0.3s; }
-.form-group:nth-child(4) { animation-delay: 0.4s; }
-.form-group:nth-child(5) { animation-delay: 0.5s; }
-.form-group:nth-child(6) { animation-delay: 0.6s; }
+.form-group:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.form-group:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.form-group:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.form-group:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.form-group:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.form-group:nth-child(6) {
+  animation-delay: 0.6s;
+}
 
 @keyframes slideUp {
-  to { opacity: 1; transform: translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Floating label effect */

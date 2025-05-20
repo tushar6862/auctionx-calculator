@@ -3,6 +3,7 @@ import { Form, Row, Col, Card, Button } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useSpring, animated, config } from "react-spring";
+import { FaArrowRight, FaCheck } from "react-icons/fa";
 import Logo from "../../assets/auctionx-logo1.png";
 import "./style.css";
 
@@ -13,6 +14,69 @@ const AuctionCalculator = () => {
     to: { opacity: 1, transform: "translateY(0)" },
     config: config.gentle,
   });
+
+  // State to track which field is active
+  const [activeField, setActiveField] = useState("communitySize");
+
+  // State to track completed fields
+  const [completedFields, setCompletedFields] = useState([]);
+
+  // Fields configuration
+  const fields = [
+    {
+      name: "communitySize",
+      label: "Community size",
+      title: `If you plan an auction like "Win an iPhone for 1$", how many people can you reach out to?`,
+    },
+    {
+      name: "bidderConversionPercent",
+      label: "Bidder conversion %",
+      title: `What percentage of those do you think will participate in an auction?`,
+    },
+    {
+      name: "avgBidsPerPerson",
+      label: "Avg. number of bids/person",
+      title: `How much is the average amount you think a bidder would comfortably spend in an auction?`,
+    },
+    {
+      name: "bidsGivenBackPercent",
+      label: "Bids given back (Buy Now) %",
+      title: `Estimate the percentage of bidders`,
+    },
+    {
+      name: "perBidCost",
+      label: "Per bid cost ($)",
+      step: "0.01",
+      title: `Rate per bid`,
+    },
+    {
+      name: "productCost",
+      label: "Product cost ($)",
+      step: "0.01",
+      title: `Cost of product under auction ($)`,
+    },
+    {
+      name: "auctionsPerDay",
+      label: "Auctions you can run per day",
+      title: `Auctions you can run per day`,
+    },
+  ];
+
+  // Function to move to the next field
+  const moveToNextField = (currentField) => {
+    // Add current field to completed fields
+    if (!completedFields.includes(currentField)) {
+      setCompletedFields([...completedFields, currentField]);
+    }
+
+    // Find the current field index
+    const currentIndex = fields.findIndex(
+      (field) => field.name === currentField
+    );
+    if (currentIndex < fields.length - 1) {
+      setActiveField(fields[currentIndex + 1].name);
+    }
+  };
 
   // Validation schema
   const validationSchema = Yup.object({
@@ -55,9 +119,7 @@ const AuctionCalculator = () => {
     },
   });
 
-  // State for showing results
-  const [showResults, setShowResults] = useState(false);
-
+  // Calculated values
   // Calculated values
   const [calculations, setCalculations] = useState({
     totalExpectedBids: 0,
@@ -65,20 +127,47 @@ const AuctionCalculator = () => {
     bidsSoldFor: 0,
     netProfit: 0,
     profitPerDay: 0,
+    perCost: 0,
+    bidsRefundedBack: 0,
+    refundAmount: 0,
+    netCollection: 0,
   });
 
+  // Update calculations when form values change
   // Update calculations when form values change
   useEffect(() => {
     const totalExpectedBids =
       formik.values.communitySize *
       (formik.values.bidderConversionPercent / 100) *
       formik.values.avgBidsPerPerson;
+
+    // Calculate bids per bidder
+    const bidsPerBidder = formik.values.avgBidsPerPerson;
+
+    // Calculate bidders using Buy Now
+    const biddersUsingBuyNow =
+      formik.values.communitySize *
+      (formik.values.bidderConversionPercent / 10) *
+      (formik.values.bidsGivenBackPercent / 100);
+
+    // Calculate bids refunded back
+    const bidsRefundedBack = biddersUsingBuyNow * bidsPerBidder;
+
+    // Calculate refund amount
+    const refundAmount = bidsRefundedBack * formik.values.perBidCost;
+
+    // Calculate net collection
+    const totalCollection = totalExpectedBids * formik.values.perBidCost;
+    const netCollection = totalCollection - refundAmount;
+
     const bidsGivenBack =
       totalExpectedBids * (formik.values.bidsGivenBackPercent / 100);
     const netBids = totalExpectedBids - bidsGivenBack;
 
     // Updated calculation: Bids sold for = net bids * per bid cost
     const bidsSoldFor = netBids * formik.values.perBidCost;
+
+    const perCost = formik.values.perBidCost;
 
     // Net profit calculation
     const netProfit = bidsSoldFor - formik.values.productCost;
@@ -90,448 +179,308 @@ const AuctionCalculator = () => {
       bidsSoldFor,
       netProfit,
       profitPerDay,
+      perCost,
+      bidsRefundedBack,
+      refundAmount,
+      netCollection,
     });
   }, [formik.values]);
 
-  // Animation for results
-  const resultsAnimation = useSpring({
-    opacity: showResults ? 1 : 0,
-    transform: showResults ? "translateY(0)" : "translateY(20px)",
-    config: config.gentle,
+  // Animation for active field
+  const activeFieldAnimation = useSpring({
+    opacity: 1,
+    height: "auto",
+    transform: "translateY(0)",
+    config: { tension: 280, friction: 60 },
   });
 
   return (
     <div className="auction-calculator-container">
-      {/* Background circles */}
+      {/* Background elements */}
       <div className="background-circle circle-1"></div>
       <div className="background-circle circle-2"></div>
       <div className="background-circle circle-3"></div>
       <div className="background-circle circle-4"></div>
+      <div className="noise"></div>
+
       <div className="logo-container">
         <img
           src={Logo}
-          alt="Logo"
+          alt="AuctionX Logo"
           className="logo-image"
           style={{ width: "200px", height: "auto" }}
         />
       </div>
-      <animated.div style={formAnimation} className="form-card">
-        <div className="form-header">
-          <h4>Auctionx Calculator</h4>
-          <hr />
+
+      <animated.div style={formAnimation} className="calculator-content">
+        <div className="form-header text-center mb-2">
+          <h3 className="text-primary">AuctionX Calculator</h3>
         </div>
-        <Card.Body className="p-1">
-          <Form onSubmit={formik.handleSubmit}>
-            <Row className="mb-1">
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label
-                    htmlFor="communitySize"
-                    className="floating-label"
-                  >
-                    Community size
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="communitySize"
-                    id="communitySize"
-                    value={formik.values.communitySize}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.communitySize &&
-                      formik.errors.communitySize
-                    }
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.communitySize}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="text-start">
-                  <Form.Label
-                    htmlFor="bidderConversionPercent"
-                    className="floating-label"
-                  >
-                    Bidder conversion %
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="bidderConversionPercent"
-                    id="bidderConversionPercent"
-                    value={formik.values.bidderConversionPercent}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.bidderConversionPercent &&
-                      formik.errors.bidderConversionPercent
-                    }
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.bidderConversionPercent}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label
-                    htmlFor="avgBidsPerPerson"
-                    className="floating-label"
-                  >
-                    Avg. number of bids/person
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="avgBidsPerPerson"
-                    id="avgBidsPerPerson"
-                    value={formik.values.avgBidsPerPerson}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.avgBidsPerPerson &&
-                      formik.errors.avgBidsPerPerson
-                    }
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.avgBidsPerPerson}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-4">
-              <Col md={4}>
-                <Form.Group className="result-form-group">
-                  <Form.Label className="result-label text-start d-block">
-                    Total expected bids
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={calculations.totalExpectedBids.toLocaleString(
-                      undefined,
-                      {
-                        maximumFractionDigits: 0,
+
+        <Row className="g-2 calculator-row">
+          {/* Left Column - Input Fields */}
+          <Col md={4} className="form-column">
+            <Card className="h-100 input-card">
+              <Card.Body>
+                <div className="input-fields-container">
+                  {fields.map((field) => (
+                    <animated.div
+                      key={field.name}
+                      style={
+                        field.name === activeField
+                          ? activeFieldAnimation
+                          : { display: "none" }
                       }
-                    )}
-                    disabled
-                    readOnly
-                    className="form-control-ms floating-input"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label
-                    htmlFor="bidsGivenBackPercent"
-                    className="floating-label"
-                  >
-                    Bids given back (Buy Now) %
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="bidsGivenBackPercent"
-                    id="bidsGivenBackPercent"
-                    value={formik.values.bidsGivenBackPercent}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.bidsGivenBackPercent &&
-                      formik.errors.bidsGivenBackPercent
-                    }
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.bidsGivenBackPercent}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="result-form-group">
-                  <Form.Label className="result-label text-start d-block">
-                    Net bids
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={calculations.netBids.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
-                    disabled
-                    readOnly
-                    className="form-control-ms floating-input"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-4">
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label htmlFor="perBidCost" className="floating-label">
-                    Per bid cost ($)
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="perBidCost"
-                    id="perBidCost"
-                    value={formik.values.perBidCost}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.perBidCost && formik.errors.perBidCost
-                    }
-                    step="0.01"
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.perBidCost}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="result-form-group">
-                  <Form.Label className="result-label text-start d-block">
-                    Bids sold for ($)
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={
-                      `$` +
-                      calculations.bidsSoldFor.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }
-                    disabled
-                    readOnly
-                    className="form-control-ms floating-input"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label htmlFor="productCost" className="floating-label">
-                    Product cost ($)
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="productCost"
-                    id="productCost"
-                    value={formik.values.productCost}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.productCost && formik.errors.productCost
-                    }
-                    step="0.01"
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.productCost}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-4">
-              <Col md={4}>
-                <Form.Group className="result-form-group">
-                  <Form.Label className="result-label text-start d-block">
-                    Net profit ($)
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={
-                      `$` +
-                      calculations.netProfit.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }
-                    disabled
-                    readOnly
-                    className={`form-control-ms floating-input result-value ${
-                      calculations.netProfit >= 0
-                        ? "profit-positive"
-                        : "profit-negative"
-                    }`}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4} className="mb-3 mb-md-0">
-                <Form.Group className="text-start">
-                  <Form.Label
-                    htmlFor="auctionsPerDay"
-                    className="floating-label"
-                  >
-                    Auctions you can run per day
-                  </Form.Label>{" "}
-                  <Form.Control
-                    type="number"
-                    name="auctionsPerDay"
-                    id="auctionsPerDay"
-                    value={formik.values.auctionsPerDay}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    isInvalid={
-                      formik.touched.auctionsPerDay &&
-                      formik.errors.auctionsPerDay
-                    }
-                    className="form-control-ms floating-input"
-                    placeholder=" "
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formik.errors.auctionsPerDay}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="result-form-group">
-                  <Form.Label className="result-label text-start d-block">
-                    Profit per day ($ auctions)
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={
-                      `$` +
-                      calculations.profitPerDay.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }
-                    disabled
-                    readOnly
-                    className={`form-control-ms floating-input result-value ${
-                      calculations.profitPerDay >= 0
-                        ? "profit-positive"
-                        : "profit-negative"
-                    }`}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <div className="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
-              <Button
-                variant="outline-dark"
-                size="lg"
-                className="px-4 btn-reset"
-                onClick={() => formik.resetForm()}
-              >
-                Reset
-              </Button>
-            </div>
-          </Form>
-
-          {showResults && (
-            <animated.div style={resultsAnimation} className="mt-5">
-              <Card className="results-card">
-                <Card.Header className="bg-success text-white">
-                  <h4 className="mb-0">Auction Results Summary</h4>
-                </Card.Header>
-                <Card.Body>
-                  <Row>
-                    <Col md={6}>
-                      <div className="result-item">
-                        <span className="result-label">
-                          Total Expected Bids:
-                        </span>
-                        <span className="result-value">
-                          {calculations.totalExpectedBids.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="result-item">
-                        <span className="result-label">Net Bids:</span>
-                        <span className="result-value">
-                          {calculations.netBids.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="result-item">
-                        <span className="result-label">Bids Sold For:</span>
-                        <span className="result-value">
-                          $
-                          {calculations.bidsSoldFor.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="result-item">
-                        <span className="result-label">Net Profit:</span>
-                        <span
-                          className={`result-value ${
-                            calculations.netProfit >= 0
-                              ? "text-success"
-                              : "text-danger"
-                          }`}
-                        >
-                          $
-                          {calculations.netProfit.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                      <div className="result-item">
-                        <span className="result-label">Profit Per Day:</span>
-                        <span
-                          className={`result-value ${
-                            calculations.profitPerDay >= 0
-                              ? "text-success"
-                              : "text-danger"
-                          }`}
-                        >
-                          $
-                          {calculations.profitPerDay.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                      <div className="result-item">
-                        <span className="result-label">Annual Profit:</span>
-                        <span
-                          className={`result-value ${
-                            calculations.profitPerDay * 365 >= 0
-                              ? "text-success"
-                              : "text-danger"
-                          }`}
-                        >
-                          $
-                          {(calculations.profitPerDay * 365).toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }
-                          )}
-                        </span>
-                      </div>
-                    </Col>
-                  </Row>
-                  <div className="text-center mt-4">
-                    <Button
-                      variant="outline-success"
-                      size="lg"
-                      onClick={() => setShowResults(false)}
+                      className="form-field-container"
                     >
-                      Back to Calculator
-                    </Button>
+                      <Form.Group className="text-start mb-3">
+                        <Form.Label
+                          htmlFor={field.name}
+                          className="floating-label"
+                        >
+                          {field.title}
+                        </Form.Label>
+                        <Form.Control
+                          type="number"
+                          name={field.name}
+                          id={field.name}
+                          value={formik.values[field.name]}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          isInvalid={
+                            formik.touched[field.name] &&
+                            formik.errors[field.name]
+                          }
+                          className="form-control-ms floating-input"
+                          placeholder=" "
+                          step={field.step || "1"}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {formik.errors[field.name]}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+
+                      <div className="text-center mt-3">
+                        <button
+                          type="button"
+                          className="field-nav-button"
+                          onClick={() => moveToNextField(field.name)}
+                          disabled={
+                            !formik.values[field.name] ||
+                            formik.errors[field.name]
+                          }
+                        >
+                          <FaArrowRight className="arrow-icon" />
+                        </button>
+                      </div>
+                    </animated.div>
+                  ))}
+                </div>
+
+                <div className="d-grid gap-2 d-md-flex justify-content-center mt-4">
+                  <Button
+                    variant="outline-dark"
+                    size="sm"
+                    className="px-4 btn-reset"
+                    onClick={() => {
+                      formik.resetForm();
+                      setActiveField("communitySize");
+                      setCompletedFields([]);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Middle Column - Value List */}
+          <Col md={4} className="value-column">
+            <Card className="h-100 value-card">
+              <Card.Body>
+                <div className="value-list-container">
+                  {fields.map((field) => (
+                    <div
+                      key={`value-${field.name}`}
+                      className={`value-item ${
+                        completedFields.includes(field.name)
+                          ? "completed"
+                          : "pending"
+                      }`}
+                    >
+                      <div className="value-label-container">
+                        <span className="value-label">{field.label}:</span>
+                        {completedFields.includes(field.name) && (
+                          <FaCheck className="check-icon" />
+                        )}
+                      </div>
+                      <span className="value-value">
+                        {completedFields.includes(field.name)
+                          ? field.name === "perBidCost" ||
+                            field.name === "productCost"
+                            ? `$${formik.values[field.name]}`
+                            : field.name === "bidderConversionPercent" ||
+                              field.name === "bidsGivenBackPercent"
+                            ? `${formik.values[field.name]}%`
+                            : formik.values[field.name]
+                          : "--"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Right Column - Results */}
+          <Col md={4} className="results-column">
+            <Card className="h-100 results-card">
+              <Card.Body>
+                <div className="results-summary">
+                  <div className="result-item">
+                    <span className="result-label">
+                      Total estimated collection:
+                    </span>
+                    <span className="result-value">
+                    $
+                      {calculations.totalExpectedBids.toLocaleString(
+                        undefined,
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )}
+                    </span>
                   </div>
-                </Card.Body>
-              </Card>
-            </animated.div>
-          )}
-        </Card.Body>
-        {/* </Card> */}
+
+                  <div className="result-item">
+                    <span className="result-label">
+                      Considering each bid is for ${calculations?.perCost} the
+                      total number of bids sold:
+                    </span>
+                    <span className="result-value">
+                      {calculations.totalExpectedBids.toLocaleString(
+                        undefined,
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Bids refunded back:</span>
+                    <span className="result-value">
+                      {calculations.bidsRefundedBack.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Refund amount:</span>
+                    <span className="result-value">
+                      $
+                      {calculations.refundAmount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">
+                      Net collection now stands at:
+                    </span>
+                    <span className="result-value">
+                      $
+                      {calculations.netCollection.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Net Bids:</span>
+                    <span className="result-value">
+                      {calculations.netBids.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Bids Sold For:</span>
+                    <span className="result-value">
+                      $
+                      {calculations.bidsSoldFor.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Net Profit:</span>
+                    <span
+                      className={`result-value ${
+                        calculations.netProfit >= 0
+                          ? "profit-positive"
+                          : "profit-negative"
+                      }`}
+                    >
+                      $
+                      {calculations.netProfit.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">
+                      Estimated profit per day:
+                    </span>
+                    <span
+                      className={`result-value ${
+                        calculations.profitPerDay >= 0
+                          ? "profit-positive"
+                          : "profit-negative"
+                      }`}
+                    >
+                      $
+                      {calculations.profitPerDay.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="result-item">
+                    <span className="result-label">Annual Profit:</span>
+                    <span
+                      className={`result-value ${
+                        calculations.profitPerDay * 365 >= 0
+                          ? "profit-positive"
+                          : "profit-negative"
+                      }`}
+                    >
+                      $
+                      {(calculations.profitPerDay * 365).toLocaleString(
+                        undefined,
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </animated.div>
     </div>
   );
