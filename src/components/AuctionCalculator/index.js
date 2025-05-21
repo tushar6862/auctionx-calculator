@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Form, Row, Col, Card, Button } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -8,6 +8,7 @@ import Logo from "../../assets/auctionx-logo1.png";
 import "./style.css";
 
 const AuctionCalculator = () => {
+  const inputRef = useRef(null);
   // Animation for the form
   const formAnimation = useSpring({
     from: { opacity: 0, transform: "translateY(50px)" },
@@ -133,6 +134,12 @@ const AuctionCalculator = () => {
     netCollection: 0,
   });
 
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [activeField]);
+
   // Update calculations when form values change
   // Update calculations when form values change
   useEffect(() => {
@@ -217,10 +224,13 @@ const AuctionCalculator = () => {
           <h3 className="text-primary">AuctionX Calculator</h3>
         </div>
 
-        <Row className="g-2 calculator-row">
+        <Row className="g-3 calculator-row">
           {/* Left Column - Input Fields */}
-          <Col md={4} className="form-column">
-            <Card className="h-100 input-card">
+          <Col xs={12} md={12} lg={4} className="form-column mb-3 mb-md-0">
+            <Card className="h-100 input-card shadow-lg">
+              <Card.Header className="bg-gradient-primary text-white">
+                <h5 className="mb-0">Add Values</h5>
+              </Card.Header>
               <Card.Body>
                 <div className="input-fields-container">
                   {fields.map((field) => (
@@ -236,7 +246,7 @@ const AuctionCalculator = () => {
                       <Form.Group className="text-start mb-3">
                         <Form.Label
                           htmlFor={field.name}
-                          className="floating-label"
+                          className="floating-label fw-bold"
                         >
                           {field.title}
                         </Form.Label>
@@ -251,9 +261,10 @@ const AuctionCalculator = () => {
                             formik.touched[field.name] &&
                             formik.errors[field.name]
                           }
-                          className="form-control-ms floating-input"
+                          className="form-control-ms floating-input shadow-sm"
                           placeholder=" "
                           step={field.step || "1"}
+                          ref={field.name === activeField ? inputRef : null}
                         />
                         <Form.Control.Feedback type="invalid">
                           {formik.errors[field.name]}
@@ -263,7 +274,7 @@ const AuctionCalculator = () => {
                       <div className="text-center mt-3">
                         <button
                           type="button"
-                          className="field-nav-button"
+                          className="field-nav-button pulse-animation"
                           onClick={() => moveToNextField(field.name)}
                           disabled={
                             !formik.values[field.name] ||
@@ -281,7 +292,7 @@ const AuctionCalculator = () => {
                   <Button
                     variant="outline-dark"
                     size="sm"
-                    className="px-4 btn-reset"
+                    className="px-4 btn-reset hover-effect"
                     onClick={() => {
                       formik.resetForm();
                       setActiveField("communitySize");
@@ -296,8 +307,11 @@ const AuctionCalculator = () => {
           </Col>
 
           {/* Middle Column - Value List */}
-          <Col md={4} className="value-column">
-            <Card className="h-100 value-card">
+          <Col xs={12} md={12} lg={4} className="value-column mb-3 mb-md-0">
+            <Card className="h-100 value-card shadow-lg">
+              <Card.Header className="bg-gradient-secondary text-white">
+                <h5 className="mb-0">Finalise Values</h5>
+              </Card.Header>
               <Card.Body>
                 <div className="value-list-container">
                   {fields.map((field) => (
@@ -310,12 +324,14 @@ const AuctionCalculator = () => {
                       }`}
                     >
                       <div className="value-label-container">
-                        <span className="value-label">{field.label}:</span>
+                        <span className="value-label fw-bold">
+                          {field.label}:
+                        </span>
                         {completedFields.includes(field.name) && (
-                          <FaCheck className="check-icon" />
+                          <FaCheck className="check-icon text-success" />
                         )}
                       </div>
-                      <span className="value-value">
+                      <span className="value-value badge bg-light text-dark">
                         {completedFields.includes(field.name)
                           ? field.name === "perBidCost" ||
                             field.name === "productCost"
@@ -334,16 +350,19 @@ const AuctionCalculator = () => {
           </Col>
 
           {/* Right Column - Results */}
-          <Col md={4} className="results-column">
-            <Card className="h-100 results-card">
+          <Col xs={12} md={12} lg={4} className="results-column mb-3 mb-md-0">
+            <Card className="h-100 results-card shadow-lg">
+              <Card.Header className="bg-gradient-success text-white">
+                <h5 className="mb-0">Final Calculatation</h5>
+              </Card.Header>
               <Card.Body>
                 <div className="results-summary">
                   <div className="result-item">
-                    <span className="result-label">
+                    <span className="result-label fw-bold text-start">
                       Total estimated collection:
                     </span>
-                    <span className="result-value">
-                    $
+                    <span className="result-value badge bg-primary">
+                      $
                       {calculations.totalExpectedBids.toLocaleString(
                         undefined,
                         {
@@ -354,11 +373,11 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">
+                    <span className="result-label fw-bold text-start">
                       Considering each bid is for ${calculations?.perCost} the
                       total number of bids sold:
                     </span>
-                    <span className="result-value">
+                    <span className="result-value badge bg-primary">
                       {calculations.totalExpectedBids.toLocaleString(
                         undefined,
                         {
@@ -369,8 +388,10 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">Bids refunded back:</span>
-                    <span className="result-value">
+                    <span className="result-label fw-bold text-start">
+                      Bids refunded back:
+                    </span>
+                    <span className="result-value badge bg-primary">
                       {calculations.bidsRefundedBack.toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}
@@ -378,8 +399,10 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">Refund amount:</span>
-                    <span className="result-value">
+                    <span className="result-label fw-bold text-start">
+                      Refund amount:
+                    </span>
+                    <span className="result-value badge bg-primary">
                       $
                       {calculations.refundAmount.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -389,10 +412,10 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">
+                    <span className="result-label fw-bold text-start">
                       Net collection now stands at:
                     </span>
-                    <span className="result-value">
+                    <span className="result-value badge bg-primary">
                       $
                       {calculations.netCollection.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -402,8 +425,10 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">Net Bids:</span>
-                    <span className="result-value">
+                    <span className="result-label fw-bold text-start">
+                      Net Bids:
+                    </span>
+                    <span className="result-value badge bg-primary">
                       {calculations.netBids.toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}
@@ -411,8 +436,10 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">Bids Sold For:</span>
-                    <span className="result-value">
+                    <span className="result-label fw-bold text-start">
+                      Bids Sold For:
+                    </span>
+                    <span className="result-value badge bg-primary">
                       $
                       {calculations.bidsSoldFor.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -420,14 +447,13 @@ const AuctionCalculator = () => {
                       })}
                     </span>
                   </div>
-
                   <div className="result-item">
-                    <span className="result-label">Net Profit:</span>
+                    <span className="result-label fw-bold text-start">
+                      Net Profit:
+                    </span>
                     <span
-                      className={`result-value ${
-                        calculations.netProfit >= 0
-                          ? "profit-positive"
-                          : "profit-negative"
+                      className={`result-value badge ${
+                        calculations.netProfit >= 0 ? "bg-success" : "bg-danger"
                       }`}
                     >
                       $
@@ -439,14 +465,14 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">
+                    <span className="result-label fw-bold text-start">
                       Estimated profit per day:
                     </span>
                     <span
-                      className={`result-value ${
+                      className={`result-value badge ${
                         calculations.profitPerDay >= 0
-                          ? "profit-positive"
-                          : "profit-negative"
+                          ? "bg-success"
+                          : "bg-danger"
                       }`}
                     >
                       $
@@ -458,12 +484,14 @@ const AuctionCalculator = () => {
                   </div>
 
                   <div className="result-item">
-                    <span className="result-label">Annual Profit:</span>
+                    <span className="result-label fw-bold text-start">
+                      Annual Profit:
+                    </span>
                     <span
-                      className={`result-value ${
+                      className={`result-value badge ${
                         calculations.profitPerDay * 365 >= 0
-                          ? "profit-positive"
-                          : "profit-negative"
+                          ? "bg-success"
+                          : "bg-danger"
                       }`}
                     >
                       $
