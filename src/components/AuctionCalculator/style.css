@@ -1205,7 +1205,7 @@ select.form-control {
 }
 
 .profit-row-blink td {
-  animation: blinkProfit 2s infinite;
+  animation: blinkProfit 2.5s infinite;
 }
 
 /* Improved value items */
