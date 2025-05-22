@@ -9,6 +9,8 @@ import "./style.css";
 
 const AuctionCalculator = () => {
   const inputRef = useRef(null);
+  const [showResults, setShowResults] = useState(false);
+
   // Animation for the form
   const formAnimation = useSpring({
     from: { opacity: 0, transform: "translateY(50px)" },
@@ -27,12 +29,12 @@ const AuctionCalculator = () => {
     {
       name: "communitySize",
       label: "Community size",
-      title: `If you plan an auction like "Win an iPhone for 1$", how many people can you reach out to?`,
+      title: `If you plan an auction like "Win an iPhone for 1$", how many people do you think would be interested?`,
     },
     {
       name: "bidderConversionPercent",
       label: "Bidder conversion %",
-      title: `How many percentage of those do you think will come participate in an auction?`,
+      title: `How many of these will actually come and participate to "Win the iPhone" for 1$?`,
     },
     {
       name: "perBidCost",
@@ -43,13 +45,13 @@ const AuctionCalculator = () => {
     {
       name: "avgBidsPerPerson",
       label: "Avg. number of bids/person",
-      title: `How much average amount do you think a bidder would comfortably spend in an auction? $`,
+      title: `How much average amount do you think a bidder would comfortably spend in an auction?`,
     },
     {
       name: "bidsGivenBackPercent",
       label: "Bids given back (Buy Now) %",
       title: `Once the auction finishes a small percentage of bidders will exercise the "Buy Now" option - where we refund the bids. 
-Estimate the percentage of bidders ("Buy Now")`,
+  Estimate the percentage of bidders ("Buy Now")`,
     },
     {
       name: "productCost",
@@ -203,48 +205,41 @@ Estimate the percentage of bidders ("Buy Now")`,
   });
 
   return (
-    <div className="auction-calculator-container">
+    <div className="auction-calculator-container gradientAni">
       {/* Background elements */}
-      <div className="background-circle circle-1"></div>
-      <div className="background-circle circle-2"></div>
-      <div className="background-circle circle-3"></div>
-      <div className="background-circle circle-4"></div>
       <div className="noise"></div>
 
-      <div className="logo-container">
+      <div
+        className="logo-container d-flex align-items-center justify-content-between w-100 responsive-padding"
+      >
         <img
           src={Logo}
           alt="AuctionX Logo"
           className="logo-image"
           style={{ width: "200px", height: "auto" }}
         />
+        <Button
+          variant="outline-dark"
+          size="sm"
+          className="px-4 btn-reset hover-effect bg-light text-dark"
+          onClick={() => {
+            formik.resetForm();
+            setActiveField("communitySize");
+            setCompletedFields([]);
+            setShowResults(false);
+          }}
+        >
+          Reset
+        </Button>
       </div>
 
       <animated.div style={formAnimation} className="calculator-content">
-        <div className="form-header mb-2 d-flex justify-content-between align-items-center">
-          <div className="flex-grow-1 text-center">
-            <h3 className="text-primary mb-0">AuctionX Calculator</h3>
-          </div>
-          <Button
-            variant="outline-dark"
-            size="sm"
-            className="px-4 btn-reset hover-effect"
-            onClick={() => {
-              formik.resetForm();
-              setActiveField("communitySize");
-              setCompletedFields([]);
-            }}
-          >
-            Reset
-          </Button>
-        </div>
-
         <Row className="calculator-row">
           {/* Left Column - Input Fields */}
           <Col xs={12} md={12} lg={4} className="form-column mb-3 mb-md-0">
             <Card className="h-100 input-card shadow-lg">
               <Card.Header className="bg-gradient-primary text-white">
-                <h5 className="mb-0">Add Values</h5>
+                <h5 className="mb-0">Input</h5>
               </Card.Header>
               <Card.Body>
                 <div className="input-fields-container">
@@ -293,6 +288,14 @@ Estimate the percentage of bidders ("Buy Now")`,
                             ref={field.name === activeField ? inputRef : null}
                             style={{ width: "70%" }}
                           />
+                          {field.name === "avgBidsPerPerson" ? (
+                            <span className="fs-5 ms-2 me-2">$</span>
+                          ) : (
+                            (field.name === "bidderConversionPercent" ||
+                              field.name === "bidsGivenBackPercent") && (
+                              <span className="fs-5 ms-2 me-2">%</span>
+                            )
+                          )}
                           <button
                             type="button"
                             className="field-nav-button pulse-animation"
@@ -319,44 +322,49 @@ Estimate the percentage of bidders ("Buy Now")`,
           {/* Middle Column - Value List */}
           <Col xs={12} md={12} lg={4} className="value-column mb-3 mb-md-0">
             <Card className="h-100 value-card shadow-lg">
-              <Card.Header className="bg-gradient-secondary text-white">
-                <h5 className="mb-0">Finalise Values</h5>
+              <Card.Header className="bg-gradient-primary text-white">
+                <h5 className="mb-0">Verify</h5>
               </Card.Header>
               <Card.Body>
                 <div className="value-list-container">
-                  {fields.map((field) => (
-                    <div
-                      key={`value-${field.name}`}
-                      className={`value-item ${
-                        completedFields.includes(field.name)
-                          ? "completed"
-                          : "pending"
-                      }`}
-                    >
-                      <div className="value-label-container">
+                  {fields.map((field) => {
+                    if (field.title === "Auctions you can run per day")
+                      return null;
+
+                    return (
+                      <div
+                        key={`value-${field.name}`}
+                        className={`value-item ${
+                          completedFields.includes(field.name)
+                            ? "completed"
+                            : "pending"
+                        }`}
+                      >
+                        <div className="value-label-container">
+                          <span
+                            className="value-label"
+                            style={{ fontSize: "15px" }}
+                          >
+                            {field.label}:
+                          </span>
+                        </div>
                         <span
-                          className="value-label fw-bold"
+                          className="value-value badge bg-light text-dark"
                           style={{ fontSize: "15px" }}
                         >
-                          {field.label}:
+                          {completedFields.includes(field.name)
+                            ? field.name === "perBidCost" ||
+                              field.name === "productCost"
+                              ? `$${formik.values[field.name]}`
+                              : field.name === "bidderConversionPercent" ||
+                                field.name === "bidsGivenBackPercent"
+                              ? `${formik.values[field.name]}%`
+                              : formik.values[field.name]
+                            : "--"}
                         </span>
                       </div>
-                      <span
-                        className="value-value badge bg-light text-dark"
-                        style={{ fontSize: "15px" }}
-                      >
-                        {completedFields.includes(field.name)
-                          ? field.name === "perBidCost" ||
-                            field.name === "productCost"
-                            ? `$${formik.values[field.name]}`
-                            : field.name === "bidderConversionPercent" ||
-                              field.name === "bidsGivenBackPercent"
-                            ? `${formik.values[field.name]}%`
-                            : formik.values[field.name]
-                          : "--"}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Card.Body>
             </Card>
@@ -365,125 +373,166 @@ Estimate the percentage of bidders ("Buy Now")`,
           {/* Right Column - Results */}
           <Col xs={12} md={12} lg={4} className="results-column mb-3 mb-md-0">
             <Card className="h-100 results-card shadow-lg">
-              <Card.Header className="bg-gradient-success text-white">
-                <h5 className="mb-0">Final Calculatation</h5>
+              <Card.Header className="bg-gradient-primary text-white">
+                <h5 className="mb-0">Voila !!</h5>
               </Card.Header>
               <Card.Body>
-                <Table striped bordered hover>
-                  <tbody>
-                    <tr>
-                      <td className="text-start">Total Number of Bids Sold:</td>
-                      <td className="text-start">
-                        {" "}
-                        {calculations.totalExpectedBids?.toLocaleString(
-                          undefined,
-                          {
-                            maximumFractionDigits: 0,
-                          }
-                        ) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">Price per bid:</td>
-                      <td className="text-start">
-                        {" "}
-                        $
-                        {calculations.perCost?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">Total Estimated Collection</td>
-                      <td className="text-start">
-                        {" "}
-                        $
-                        {calculations.totalCollection?.toLocaleString(
-                          undefined,
-                          {
+                {!showResults && (
+                  <div className="text-center mb-4">
+                    <Button
+                      variant="success"
+                      size="md"
+                      className="shadow-lg"
+                      onClick={() => setShowResults((prev) => !prev)}
+                      disabled={!completedFields.includes("auctionsPerDay")}
+                      style={{
+                        backgroundColor: completedFields.includes(
+                          "auctionsPerDay"
+                        )
+                          ? "#28a745"
+                          : "#6c757d",
+                        borderColor: completedFields.includes("auctionsPerDay")
+                          ? "#28a745"
+                          : "#6c757d",
+                        cursor: completedFields.includes("auctionsPerDay")
+                          ? "pointer"
+                          : "not-allowed",
+                      }}
+                    >
+                      Show me my PROFIT!!
+                    </Button>
+                  </div>
+                )}
+                {showResults && (
+                  <Table striped bordered hover style={{ fontSize: "15px" }}>
+                    <tbody>
+                      <tr>
+                        <td className="text-start">
+                          Total Number of Bids Sold:
+                        </td>
+                        <td className="text-start">
+                          {" "}
+                          {calculations.totalExpectedBids?.toLocaleString(
+                            undefined,
+                            {
+                              maximumFractionDigits: 0,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">Price per bid:</td>
+                        <td className="text-start">
+                          {" "}
+                          $
+                          {calculations.perCost?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }
-                        ) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">
-                        Amount refunded back due to "Buy Now" :
-                      </td>
-                      <td className="text-start">
-                        $
-                        {calculations.refundAmount?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">Net Collection:</td>
-                      <td className="text-start">
-                        {" "}
-                        $
-                        {calculations.netCollection?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">Product price:</td>
-                      <td className="text-start">
-                        $
-                        {calculations.productCostAmount?.toLocaleString(
-                          undefined,
-                          {
+                          }) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">
+                          Total Estimated Collection
+                        </td>
+                        <td className="text-start">
+                          {" "}
+                          $
+                          {calculations.totalCollection?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">
+                          Amount refunded back due to "Buy Now" :
+                        </td>
+                        <td className="text-start">
+                          $
+                          {calculations.refundAmount?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">Net Collection:</td>
+                        <td className="text-start">
+                          {" "}
+                          $
+                          {calculations.netCollection?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">Product price:</td>
+                        <td className="text-start">
+                          $
+                          {calculations.productCostAmount?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">
+                          Net profit for the auction:
+                        </td>
+                        <td className="text-start">
+                          $
+                          {calculations.netProfit?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }
-                        ) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">
-                        Net profit for the auction:
-                      </td>
-                      <td className="text-start">
-                        $
-                        {calculations.netProfit?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">Profit per Day:</td>
-                      <td className="text-start">
-                        $
-                        {calculations.profitPerDay?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="text-start">
-                        Estimated yearly collection:
-                      </td>
-                      <td className="text-start">
-                        {" "}
-                        $
-                        {(calculations.profitPerDay * 365)?.toLocaleString(
-                          undefined,
-                          {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }
-                        ) || 0}
-                      </td>
-                    </tr>
-                  </tbody>
-                </Table>
+                          }) || 0}
+                        </td>
+                      </tr>
+                      {/* <tr>
+                        <td className="text-start">Profit per Day:</td>
+                        <td className="text-start">
+                          $
+                          {calculations.profitPerDay?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-start">
+                          Estimated yearly collection:
+                        </td>
+                        <td className="text-start">
+                          {" "}
+                          $
+                          {(calculations.profitPerDay * 365)?.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }
+                          ) || 0}
+                        </td>
+                      </tr> */}
+                    </tbody>
+                  </Table>
+                )}
               </Card.Body>
             </Card>
           </Col>
