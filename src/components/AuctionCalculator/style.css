@@ -331,7 +331,7 @@ body {
   }
 }
 @media (max-width: 480px) {
-   .responsive-padding {
+  .responsive-padding {
     padding-right: 50px !important;
   }
 
@@ -475,7 +475,7 @@ body {
 }
 
 @media (max-width: 600px) {
-   .responsive-padding {
+  .responsive-padding {
     padding-right: 45px !important;
   }
 
@@ -1189,6 +1189,23 @@ select.form-control {
 .card-header {
   padding: 1rem;
   font-weight: bold;
+}
+
+@keyframes blinkProfit {
+  0%, 100% {
+    background-color: #e8f5e9; 
+    color: #28a745;         
+    box-shadow: 0 0 10px 2px #00c853;
+  }
+  50% {
+    background-color: #c8e6c9; 
+    color: #28a735;  
+    box-shadow: 0 0 5px 1px #00a843;      
+  }
+}
+
+.profit-row-blink td {
+  animation: blinkProfit 2s infinite;
 }
 
 /* Improved value items */

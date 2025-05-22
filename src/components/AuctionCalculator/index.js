@@ -59,11 +59,11 @@ const AuctionCalculator = () => {
       step: "0.01",
       title: `Cost of product under auction ($)`,
     },
-    {
-      name: "auctionsPerDay",
-      label: "Auctions you can run per day",
-      title: `Auctions you can run per day`,
-    },
+    // {
+    //   name: "auctionsPerDay",
+    //   label: "Auctions you can run per day",
+    //   title: `Auctions you can run per day`,
+    // },
   ];
 
   // Function to move to the next field
@@ -209,9 +209,7 @@ const AuctionCalculator = () => {
       {/* Background elements */}
       <div className="noise"></div>
 
-      <div
-        className="logo-container d-flex align-items-center justify-content-between w-100 responsive-padding"
-      >
+      <div className="logo-container d-flex align-items-center justify-content-between w-100 responsive-padding">
         <img
           src={Logo}
           alt="AuctionX Logo"
@@ -327,44 +325,39 @@ const AuctionCalculator = () => {
               </Card.Header>
               <Card.Body>
                 <div className="value-list-container">
-                  {fields.map((field) => {
-                    if (field.title === "Auctions you can run per day")
-                      return null;
-
-                    return (
-                      <div
-                        key={`value-${field.name}`}
-                        className={`value-item ${
-                          completedFields.includes(field.name)
-                            ? "completed"
-                            : "pending"
-                        }`}
-                      >
-                        <div className="value-label-container">
-                          <span
-                            className="value-label"
-                            style={{ fontSize: "15px" }}
-                          >
-                            {field.label}:
-                          </span>
-                        </div>
+                  {fields.map((field) => (
+                    <div
+                      key={`value-${field.name}`}
+                      className={`value-item ${
+                        completedFields.includes(field.name)
+                          ? "completed"
+                          : "pending"
+                      }`}
+                    >
+                      <div className="value-label-container">
                         <span
-                          className="value-value badge bg-light text-dark"
+                          className="value-label"
                           style={{ fontSize: "15px" }}
                         >
-                          {completedFields.includes(field.name)
-                            ? field.name === "perBidCost" ||
-                              field.name === "productCost"
-                              ? `$${formik.values[field.name]}`
-                              : field.name === "bidderConversionPercent" ||
-                                field.name === "bidsGivenBackPercent"
-                              ? `${formik.values[field.name]}%`
-                              : formik.values[field.name]
-                            : "--"}
+                          {field.label}:
                         </span>
                       </div>
-                    );
-                  })}
+                      <span
+                        className="value-value badge bg-light text-dark"
+                        style={{ fontSize: "15px" }}
+                      >
+                        {completedFields.includes(field.name)
+                          ? field.name === "perBidCost" ||
+                            field.name === "productCost"
+                            ? `$${formik.values[field.name]}`
+                            : field.name === "bidderConversionPercent" ||
+                              field.name === "bidsGivenBackPercent"
+                            ? `${formik.values[field.name]}%`
+                            : formik.values[field.name]
+                          : "--"}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </Card.Body>
             </Card>
@@ -384,17 +377,15 @@ const AuctionCalculator = () => {
                       size="md"
                       className="shadow-lg"
                       onClick={() => setShowResults((prev) => !prev)}
-                      disabled={!completedFields.includes("auctionsPerDay")}
+                      disabled={!completedFields.includes("productCost")}
                       style={{
-                        backgroundColor: completedFields.includes(
-                          "auctionsPerDay"
-                        )
+                        backgroundColor: completedFields.includes("productCost")
                           ? "#28a745"
                           : "#6c757d",
-                        borderColor: completedFields.includes("auctionsPerDay")
+                        borderColor: completedFields.includes("productCost")
                           ? "#28a745"
                           : "#6c757d",
-                        cursor: completedFields.includes("auctionsPerDay")
+                        cursor: completedFields.includes("productCost")
                           ? "pointer"
                           : "not-allowed",
                       }}
@@ -489,9 +480,15 @@ const AuctionCalculator = () => {
                           ) || 0}
                         </td>
                       </tr>
-                      <tr>
+                      <tr
+                        className={
+                          calculations.netProfit > 0 ? "profit-row-blink" : ""
+                        }
+                      >
                         <td className="text-start">
-                          Net profit for the auction:
+                          {calculations.netProfit > 0
+                            ? "Net profit for the auction:"
+                            : "Net loss for the auction:"}
                         </td>
                         <td className="text-start">
                           $
